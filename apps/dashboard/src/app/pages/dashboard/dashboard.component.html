@@ -1,0 +1,109 @@
+<!-- eslint-disable @angular-eslint/template/prefer-control-flow -->
+<div class="min-h-screen bg-gray-100">
+  <!-- Header -->
+  <header class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">Task Manager Dashboard</h1>
+        <p class="text-sm text-gray-600 mt-1" *ngIf="user$ | async as user">
+          Logged in as: <span class="font-semibold">{{ user.name }}</span>
+          <span
+            class="ml-3 px-3 py-1 rounded-full text-white text-sm font-bold"
+            [ngClass]="{
+              'bg-purple-600': user.role === 'Owner',
+              'bg-blue-600': user.role === 'Admin',
+              'bg-green-600': user.role === 'Viewer'
+            }"
+          >
+            {{ user.role }}
+          </span>
+        </p>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button
+          (click)="logout()"
+          class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Role Information Banner -->
+  <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mx-4 mt-4 rounded" *ngIf="user$ | async as user">
+    <div class="flex">
+      <div class="flex-shrink-0">
+        <svg class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <div class="ml-3">
+        <p class="text-sm text-blue-700">
+          <span class="font-bold">Your Role ({{ user.role }}):</span>
+          <ng-container [ngSwitch]="user.role">
+            <span *ngSwitchCase="'Owner'">You have full access to all tasks and audit logs in your organization.</span>
+            <span *ngSwitchCase="'Admin'">You can manage tasks and view audit logs for your organization.</span>
+            <span *ngSwitchCase="'Viewer'">You can view and manage only your own tasks.</span>
+          </ng-container>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="bg-white border-b mt-4">
+    <div class="max-w-7xl mx-auto px-4 flex space-x-8">
+      <button
+        (click)="setActiveTab('tasks')"
+        [class.border-b-4]="activeTab === 'tasks'"
+        [class.border-blue-500]="activeTab === 'tasks'"
+        class="py-4 font-medium text-gray-700 hover:text-gray-900 transition"
+      >
+        Tasks
+      </button>
+      <button
+        (click)="setActiveTab('audit')"
+        [class.border-b-4]="activeTab === 'audit'"
+        [class.border-blue-500]="activeTab === 'audit'"
+        class="py-4 font-medium text-gray-700 hover:text-gray-900 transition"
+        [disabled]="(user$ | async)?.role === 'Viewer'"
+        [class.opacity-50]="(user$ | async)?.role === 'Viewer'"
+        [class.cursor-not-allowed]="(user$ | async)?.role === 'Viewer'"
+      >
+        Audit Log
+        <span class="text-xs text-red-500 ml-1" *ngIf="(user$ | async)?.role === 'Viewer'">(Viewer Only)</span>
+      </button>
+      <button
+        (click)="setActiveTab('users')"
+        [class.border-b-4]="activeTab === 'users'"
+        [class.border-blue-500]="activeTab === 'users'"
+        class="py-4 font-medium text-gray-700 hover:text-gray-900 transition"
+        [disabled]="(user$ | async)?.role !== 'Owner'"
+        [class.opacity-50]="(user$ | async)?.role !== 'Owner'"
+        [class.cursor-not-allowed]="(user$ | async)?.role !== 'Owner'"
+      >
+        Users
+        <span class="text-xs text-red-500 ml-1" *ngIf="(user$ | async)?.role !== 'Owner'">(Owner Only)</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <ng-container *ngIf="activeTab === 'tasks'">
+      <app-tasks></app-tasks>
+    </ng-container>
+    <ng-container *ngIf="activeTab === 'audit' && ((user$ | async)?.role === 'Owner' || (user$ | async)?.role === 'Admin')">
+      <app-audit-log></app-audit-log>
+    </ng-container>
+    <div *ngIf="activeTab === 'audit' && (user$ | async)?.role === 'Viewer'" class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+      <p class="text-yellow-800 font-semibold">Access Denied</p>
+      <p class="text-yellow-700 mt-2">Only Owner and Admin roles can view audit logs.</p>
+    </div>
+    <ng-container *ngIf="activeTab === 'users' && (user$ | async)?.role === 'Owner'">
+      <app-users></app-users>
+    </ng-container>
+  </div>
+</div>
+

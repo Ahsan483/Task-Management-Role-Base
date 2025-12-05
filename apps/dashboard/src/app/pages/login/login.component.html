@@ -1,0 +1,122 @@
+<!-- eslint-disable @angular-eslint/template/prefer-control-flow -->
+<div class="flex items-center justify-center min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 px-4">
+  <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md relative z-10">
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Task Manager</h1>
+
+    <!-- LOGIN FORM -->
+    <ng-container *ngIf="isLoginMode; else registerFormBlock">
+      <h2 class="text-2xl font-semibold text-center mb-4 text-gray-700">Login</h2>
+      <form [formGroup]="loginForm" (ngSubmit)="login()" class="space-y-4">
+        <div>
+          <label for="loginEmail" class="block text-sm font-medium text-gray-700">Email</label>
+          <input
+            id="loginEmail"
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label for="loginPassword" class="block text-sm font-medium text-gray-700">Password</label>
+          <input
+            id="loginPassword"
+            type="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="loginForm.invalid || loading"
+          class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition"
+        >
+          {{ loading ? 'Logging in...' : 'Login' }}
+        </button>
+      </form>
+
+      <div *ngIf="error" class="mt-4 p-3 bg-red-100 text-red-700 rounded">
+        {{ error }}
+      </div>
+
+      <p class="text-center mt-4 text-gray-600">
+        Don't have an account?
+        <button (click)="toggleMode()" class="text-blue-500 hover:underline font-semibold">
+          Register
+        </button>
+      </p>
+    </ng-container>
+
+    <!-- REGISTER FORM -->
+    <ng-template #registerFormBlock>
+      <h2 class="text-2xl font-semibold text-center mb-4 text-gray-700">Register</h2>
+      <form [formGroup]="registerForm" (ngSubmit)="register()" class="space-y-4">
+        <div>
+          <label for="registerEmail" class="block text-sm font-medium text-gray-700">Email</label>
+          <input
+            id="registerEmail"
+            type="email"
+            formControlName="email"
+            placeholder="Enter your email"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label for="registerName" class="block text-sm font-medium text-gray-700">Name</label>
+          <input
+            id="registerName"
+            type="text"
+            formControlName="name"
+            placeholder="Enter your name"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label for="registerPassword" class="block text-sm font-medium text-gray-700">Password</label>
+          <input
+            id="registerPassword"
+            type="password"
+            formControlName="password"
+            placeholder="Enter your password"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <div>
+          <label for="registerOrgId" class="block text-sm font-medium text-gray-700">Organization ID</label>
+          <input
+            id="registerOrgId"
+            type="number"
+            formControlName="organizationId"
+            placeholder="Enter organization ID"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          />
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="registerForm.invalid || loading"
+          class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-400 transition"
+        >
+          {{ loading ? 'Registering...' : 'Register' }}
+        </button>
+      </form>
+
+      <div *ngIf="error" class="mt-4 p-3 bg-red-100 text-red-700 rounded">
+        {{ error }}
+      </div>
+
+      <p class="text-center mt-4 text-gray-600">
+        Already have an account?
+        <button (click)="toggleMode()" class="text-blue-500 hover:underline font-semibold">
+          Login
+        </button>
+      </p>
+    </ng-template>
+  </div>
+</div>

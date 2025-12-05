@@ -1,0 +1,215 @@
+<!-- eslint-disable @angular-eslint/template/no-negated-async -->
+<!-- eslint-disable @angular-eslint/template/label-has-associated-control -->
+<!-- eslint-disable @angular-eslint/template/prefer-control-flow -->
+<div class="bg-white rounded-lg shadow p-6">
+  <!-- Error Alert -->
+  <div *ngIf="error$ | async as error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 flex justify-between items-center">
+    <div>
+      <p class="font-bold">Error</p>
+      <p class="text-sm">{{ error }}</p>
+    </div>
+    <button (click)="clearError()" class="text-red-700 hover:text-red-900">×</button>
+  </div>
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">My Tasks</h2>
+    <button
+      (click)="toggleForm()"
+      class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
+    >
+      {{ showForm ? 'Cancel' : '+ New Task' }}
+    </button>
+  </div>
+
+  <!-- Progress Bar -->
+  <div *ngIf="(tasks$ | async) as tasks" class="mb-6">
+    <div class="flex justify-between items-center mb-2">
+      <span class="text-sm font-medium text-gray-700">Completion: {{ getProgressPercentage(tasks) }}%</span>
+      <span class="text-sm text-gray-500">{{ getCompletedCount(tasks) }}/{{ tasks.length }} completed</span>
+    </div>
+    <div class="w-full bg-gray-200 rounded-full h-2">
+      <div
+        class="bg-green-500 h-2 rounded-full transition"
+        [style.width.%]="getProgressPercentage(tasks)"
+      ></div>
+    </div>
+  </div>
+
+  <!-- Create Task Form -->
+  <div *ngIf="showForm" class="bg-gray-50 p-4 rounded mb-6 border border-blue-300">
+    <h3 class="font-semibold text-lg mb-4">Create New Task</h3>
+    <form [formGroup]="taskForm" (ngSubmit)="createTask()" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Title <span class="text-red-500">*</span></label>
+        <input
+          type="text"
+          formControlName="title"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          placeholder="Enter task title"
+        />
+        <span *ngIf="taskForm.get('title')?.invalid && taskForm.get('title')?.touched" class="text-red-500 text-xs">Title is required</span>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Description <span class="text-red-500">*</span></label>
+        <textarea
+          formControlName="description"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          placeholder="Enter task description"
+          rows="3"
+        ></textarea>
+        <span *ngIf="taskForm.get('description')?.invalid && taskForm.get('description')?.touched" class="text-red-500 text-xs">Description is required</span>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Category</label>
+          <input
+            type="text"
+            formControlName="category"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+            placeholder="e.g., Work, Personal"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Initial Status</label>
+          <select
+            formControlName="status"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+          >
+            <option value="Todo">Todo</option>
+            <option value="InProgress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex space-x-2">
+        <button
+          type="submit"
+          [disabled]="taskForm.invalid || (loading$ | async)"
+          class="flex-1 bg-green-500 text-white py-2 rounded hover:bg-green-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+        >
+          {{ (loading$ | async) ? 'Creating...' : 'Create Task' }}
+        </button>
+        <button
+          type="button"
+          (click)="toggleForm()"
+          class="flex-1 bg-gray-400 text-white py-2 rounded hover:bg-gray-500 transition"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filter -->
+  <div class="mb-6 flex space-x-2">
+    <button
+      (click)="setFilter('all')"
+      [class.bg-blue-500]="selectedStatus === 'all'"
+      [class.text-white]="selectedStatus === 'all'"
+      [class.bg-gray-200]="selectedStatus !== 'all'"
+      class="px-4 py-2 rounded transition font-medium"
+    >
+      All
+    </button>
+    <button
+      *ngFor="let status of statusOptions"
+      (click)="setFilter(status)"
+      [class.bg-blue-500]="selectedStatus === status"
+      [class.text-white]="selectedStatus === status"
+      [class.bg-gray-200]="selectedStatus !== status"
+      class="px-4 py-2 rounded transition font-medium"
+    >
+      {{ status }}
+    </button>
+  </div>
+
+  <!-- Tasks List -->
+  <div *ngIf="(tasks$ | async) as tasks" class="space-y-4">
+    <div
+      *ngFor="let task of getFilteredTasks(tasks)"
+      class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition"
+      [ngClass]="
+        task.status === 'Done'
+          ? 'bg-green-50'
+          : task.status === 'InProgress'
+            ? 'bg-yellow-50'
+            : 'bg-white'
+      "
+    >
+      <div class="flex justify-between items-start mb-2">
+        <div class="flex-1">
+          <div class="flex items-center space-x-2">
+            <h3 class="text-lg font-semibold text-gray-900" [class.line-through]="task.status === 'Done'">
+              {{ task.title }}
+            </h3>
+            <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+              by {{ task.owner?.name || 'Unknown' }}
+            </span>
+          </div>
+          <p class="text-sm text-gray-600 mt-1">{{ task.description }}</p>
+        </div>
+        <div class="flex space-x-2 ml-4" *ngIf="user$ | async as user">
+          <button
+            (click)="updateTaskStatus(task.id, task.status === 'Done' ? 'Todo' : 'Done')"
+            [disabled]="!canEditTask(task, user)"
+            [class.cursor-not-allowed]="!canEditTask(task, user)"
+            [class.opacity-50]="!canEditTask(task, user)"
+            class="px-3 py-1 text-sm rounded transition"
+            [ngClass]="canEditTask(task, user) ? 'bg-blue-500 text-white hover:bg-blue-600' : 'bg-gray-300 text-gray-500'"
+          >
+            {{ task.status === 'Done' ? 'Reopen' : 'Complete' }}
+          </button>
+          <button
+            (click)="deleteTask(task.id)"
+            [disabled]="!canDeleteTask(task, user)"
+            [class.cursor-not-allowed]="!canDeleteTask(task, user)"
+            [class.opacity-50]="!canDeleteTask(task, user)"
+            class="px-3 py-1 text-sm rounded transition"
+            [ngClass]="canDeleteTask(task, user) ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-gray-300 text-gray-500'"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <span class="text-xs font-semibold px-2 py-1 rounded bg-gray-200 text-gray-800">
+            {{ task.category || 'General' }}
+          </span>
+          <span
+            [ngClass]="
+              task.status === 'Done'
+                ? 'bg-green-200 text-green-800'
+                : task.status === 'InProgress'
+                  ? 'bg-yellow-200 text-yellow-800'
+                  : 'bg-blue-200 text-blue-800'
+            "
+            class="text-xs font-semibold px-2 py-1 rounded"
+          >
+            {{ task.status }}
+          </span>
+        </div>
+        <select
+          (change)="onStatusChange(task.id, $event)"
+          [value]="task.status"
+          class="text-sm px-2 py-1 border border-gray-300 rounded focus:outline-none focus:border-blue-500"
+        >
+          <option value="Todo">Todo</option>
+          <option value="InProgress">In Progress</option>
+          <option value="Done">Done</option>
+        </select>
+      </div>
+    </div>
+
+    <div *ngIf="getFilteredTasks(tasks).length === 0" class="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
+      <p class="text-lg font-medium">No tasks found in this filter.</p>
+      <p class="text-sm mt-1">Try a different filter or create a new task to get started!</p>
+    </div>
+  </div>
+
+  <div *ngIf="(loading$ | async) && !(tasks$ | async)" class="text-center py-8">
+    <p class="text-gray-500">Loading tasks...</p>
+  </div>
+</div>

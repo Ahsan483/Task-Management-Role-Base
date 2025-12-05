@@ -41,8 +41,15 @@ Frontend runs on: **http://localhost:4200**
 ### 4. Test The System
 
 1. Open browser: `http://localhost:4200`
-2. Register new account or use test credentials
-3. Create organization and start managing tasks!
+2. Test users are :
+3. Owner email : owner@example.com
+4. Owner pass : password123
+5. Admin email : admin@example.com
+4. Admin pass : password123
+5. Viewer test user : test@gmail.com
+6. Viewer test pass : test1234
+8. Register new account or use test credentials
+9. Create organization and start managing tasks!
 
 ---
 
